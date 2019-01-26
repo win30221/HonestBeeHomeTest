@@ -3,3 +3,4 @@ build:
 	go build -o bin/client client.go
 	go build -o bin/server server.go
 	go build -o bin/externalapi externalapi.go
+	go build -o bin/monitor monitor.go
