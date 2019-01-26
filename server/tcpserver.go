@@ -2,8 +2,9 @@ package server
 
 import (
 	"log"
+	"math/rand"
 	"net"
-	"strings"
+	"net/http"
 	"time"
 )
 
@@ -13,13 +14,6 @@ type Server struct {
 	joinsniffer	chan net.Conn	// Client連線
 	insniffer	chan string		// Client發訊
 	quitsniffer chan *Client	// Client退出
-}
-
-type Client struct {
-	id		int				// Client ID
-	conn	net.Conn		// Client連線
-	in		chan string		// Client收訊
-	quit	chan *Client	// Client退出
 }
 
 func (this *Server) joinHandler(conn net.Conn) {
@@ -43,7 +37,28 @@ func (this *Server) joinHandler(conn net.Conn) {
 }
 
 func (this *Server) receivedHandler(message string) {
-	log.Println("收到的訊息:", message)
+	// log.Println("收到的訊息:", message)
+
+	// 取出呼叫外部api
+	api := EXTERNAL_APIS[rand.Intn(len(EXTERNAL_APIS))]
+
+	req, err := http.NewRequest("GET", api, nil)
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	params := req.URL.Query()
+	params.Add("message", message)
+	req.URL.RawQuery = params.Encode()
+
+	resp, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		log.Println("外部服務不可用")
+		return
+	}
+	defer resp.Body.Close()
+
 }
 
 func (this *Server) quitHandler(client *Client) {
@@ -52,36 +67,6 @@ func (this *Server) quitHandler(client *Client) {
 		log.Printf("Client[%d]退出", client.id)
 		client.conn.Close()
 	}
-}
-
-func CreateClient(id int, conn net.Conn) *Client {
-	client := &Client{
-		id:   id,
-		conn: conn,
-		in:   make(chan string),
-		quit: make(chan *Client),
-	}
-	go client.read()
-	return client
-}
-
-// 實際讀取Client訊息
-func (this *Client) read() {
-	for {
-		data := make([]byte, 1024)
-		n, err := this.conn.Read(data)
-		if err != nil {
-			this.quiting()
-			return
-		}
-		// 去除尾部換行塞入in Channel
-		this.in <- strings.TrimSuffix(string(data[0:n]), "\n")
-	}
-}
-
-// Client呼叫退出
-func (this *Client) quiting() {
-	this.quit <- this
 }
 
 // 監聽所有Client與Server溝通的Channel
