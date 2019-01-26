@@ -1,0 +1,9 @@
+package server
+
+var (
+	TCP_PORT			= "9090"
+	MAX_CLIENTS			= 100
+	MAX_REQUEST_COUNT	= 100
+	CLIENT_ID			= 1
+	REQUEST_PER_SECOND	= 30
+)
