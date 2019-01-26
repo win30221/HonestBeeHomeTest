@@ -2,6 +2,7 @@ package server
 
 var (
 	TCP_PORT			= "9090"
+	HTTP_PORT			= "8080"
 	MAX_CLIENTS			= 100
 	MAX_REQUEST_COUNT	= 100
 	CLIENT_ID			= 1
