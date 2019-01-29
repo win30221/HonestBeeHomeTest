@@ -39,5 +39,6 @@ func (this *Client) read() {
 
 // Client呼叫退出
 func (this *Client) quiting() {
+	close(this.in)
 	this.quit <- this
 }

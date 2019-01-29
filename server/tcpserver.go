@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sync"
 	"time"
+	_ "net/http/pprof"
 )
 
 var ServerInstance *Server
@@ -34,7 +35,10 @@ func (this *Server) joinHandler(conn net.Conn) {
 	// 持續監聽Client發訊
 	go func() {
 		for {
-			msg := <-client.in
+			msg, exist := <-client.in
+			if !exist {
+				break
+			}
 			this.insniffer <- msg
 		}
 	}()
